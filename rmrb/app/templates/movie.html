@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>悬崖之上</title>
+    <style type="text/css">
+        path{
+          fill: none;
+          stroke: #666;
+          stroke-width: 1.5px;
+        }
+        circle {
+          stroke: #333;
+          stroke-width: 1.5px;
+        }
+        text {
+          font: 10px sans-serif;
+          pointer-events: none;
+        }
+        .tooltip{
+            position: absolute;
+            width: 240px;
+            height: auto;
+            font-family: simsun;
+            font-size: 10px;
+            text-align: left;
+            color: black;
+            border-width: 1px solid black;
+            background-color: #7FFF00;
+            border-radius: 3px;
+        }
+        .tooltip:after{
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 20%;
+            margin-left: -3px;
+            width: 0;
+            height: 0;
+            border-bottom: 12px solid black;
+            border-right: 12px solid transparent;
+            border-left: 12px solid transparent;
+        }
+        li{
+				list-style-type: none;
+				float: left;
+			}
+			a{
+				display: block;
+				width: 200px;
+				height: 50px;
+				line-height: 50px;
+				background-color: #6a8bbc;
+				margin: 0px 0px;
+				color: #fff;
+				text-align: center;
+				text-decoration: none;
+				font-size: 18px;
+			}
+			a:hover{
+				background-color: #66CCCC;
+			}
+			div{margin:0.2px auto;}
+			.box1{background: #66CCCC;text-align: center;}
+			.box2{background: #6a8bbc;text-align: right;line-height: 50px;padding-right: 80px;}
+			.box3{text-align: right;line-height: 15px;}
+    </style>
+</head>
+<body>
+<div class="box2">
+    <font size="48" color="#f0f8ff" face="MiNiJianZongYi-1">实时票房观测系统</font>
+     <li><a href="http://127.0.0.1:5000/bo_top10">票房数据</a></li>
+    <li><a href="http://127.0.0.1:5000/xyzs">国内热门</a></li>
+    <li><a href="http://127.0.0.1:5000/map">地区分布</a></li>
+
+</div>
+</body>
+    <script src="../static/js/d3.v3.min.js"></script>
+	<script type="text/javascript">
+		var  width=(window.innerWidth||document.documentElement.clientWidth||document.body.clientWidth)*0.9;
+		var  height=(window.innerHeight||document.documentElement.clientHeight||document.body.clientHeight)*0.9;
+		var  img_h=50;
+		var  img_w=50;
+		var  radius=10;
+		var svg=d3.select("body")
+                .append("svg")
+                .attr("width",width)
+                .attr("height",height);
+
+
+        var nodes=new Array({{nodes_num}});
+         {% for n in nodes %}
+            nodes[{{loop.index-1}}]={name:"{{n.name}}",image:"{{n.image}}",intro:"{{n.intro}}"};
+         {% endfor %}
+
+        var edges=new Array({{edges_num}});
+         {% for e in edges %}
+            edges[{{loop.index-1}}]={source:{{e.source}},target:{{e.target}},relation:"{{e.relation}}"};
+         {% endfor %}
+
+		var force=d3.layout.force()
+                .nodes(nodes)
+				.links(edges)
+				.size([width,height])
+				.linkDistance(150)
+				.charge(-500)
+                .start();
+        //提示框部分
+		var tooltip=d3.selectAll("body")
+                    .append("div")
+                    .attr("class","tooltip")
+                    .style("opacity",0.0);
+       //箭头绘制
+		var defs = svg.append("defs");
+		var radius=10;
+		var arrowMarker = defs.append("marker")
+								.attr("id","arrow")
+								.attr("markerUnits","strokeWidth")
+								.attr("markerWidth","4")
+								.attr("markerHeight","4")
+								.attr("viewBox","0 0 4 4")
+								.attr("refX",20+radius/8-2)   //实际是radius/strokeWidth
+								.attr("refY",2)
+								.attr("orient","auto");
+
+		var arrow_path = "M0,1 L4,2 L0,3 L0,0";
+		arrowMarker.append("path").attr("d",arrow_path);
+		var color=d3.scale.category20();
+		var path = svg.selectAll("path")
+								  .data(edges)
+								  .enter()
+								  .append("path")
+								  .attr("id", function(d,i) {
+									   return "edgepath" +i;
+								  })
+								  .attr("class","edges")
+								  .attr("marker-end","url(#arrow)");
+		var pathtext = svg.selectAll('.pathText')
+				  .data(edges)
+				  .enter()
+				  .append("text")
+				  .attr("class","pathText")
+				  .append('textPath')
+				  .attr("text-anchor", "middle")//居中
+				  .attr("startOffset","50%")
+				  .attr('xlink:href', function(d,i) { return "#edgepath" + i; })
+				  .text(function(d) { return d.relation; });
+		var  img_h=50;
+		var  img_w=50;
+		var  radius=23;
+		var  circles=svg.selectAll("forceCircle")
+	               .data(nodes)
+				   .enter()
+				   .append("circle")
+				   .attr("class","forceCircle")
+				   .attr("r",radius)
+				   .style("stroke","DarkGray")
+				   .style("stroke-width","1.0px")
+				   .attr("fill", function(d, i){
+                                    //创建圆形图片
+                                    var defs = svg.append("defs").attr("id", "imgdefs");
+                                    var catpattern = defs.append("pattern")
+                                                         .attr("id", "catpattern" + i)
+                                                         .attr("height", 1)
+                                                         .attr("width", 1);
+                                    catpattern.append("image")
+                                            .attr("x", - (img_w / 2 - radius+5.8))
+                                            .attr("y", - (img_h / 2 - radius+3.5))
+                                            .attr("width", img_w+11)
+                                            .attr("height", img_h+6)
+                                            .attr("xlink:href","../static/pic/xyzs/"+d.image);
+                                    return "url(#catpattern" + i + ")";
+                    })
+					.on("mouseover",function(d,i){    //加入提示框
+                        tooltip.html("角色简介："+d.intro)
+                               .style("left",(d3.event.pageX)+"px")
+                               .style("top",(d3.event.pageY+20)+"px")
+                               .style("opacity",1.0);
+					})
+					.on("mousemove",function(d){
+                          tooltip.style("left",(d3.event.pageX)+"px")
+                                 .style("top",(d3.event.pageY+20)+"px"); })
+                   .on("mouseout",function(d){
+                        tooltip.style("opacity",0.0); })
+				   .call(force.drag);
+	    var texts=svg.selectAll(".forceText")
+                 .data(nodes)
+				 .enter()
+				 .append("text")
+				 .attr("class","forceText")
+				 .attr("x",function(d){return d.x;})
+				 .attr("y",function(d){return d.y;})
+				 .style("stroke", "#336666")
+                 .attr("dx","-1.5em")
+				 .attr("dy","3em")
+				 .text(function(d){return d.name;});
+
+		force.on("tick",function(){
+		      path.attr("d", function(d) {
+					var dx = d.target.x - d.source.x;//增量
+					var	dy = d.target.y - d.source.y;
+					return "M" + d.source.x + ","+ d.source.y + "L" + d.target.x + "," + d.target.y;
+				  });
+		      path.attr("transform","translate(-200,0)");
+			  circles.attr("cx",function(d){return d.x;});
+			  circles.attr("cy",function(d){return d.y;});
+			  circles.attr("transform","translate(-200,0)");
+			  texts.attr("x",function(d){return d.x;});
+			  texts.attr("y",function(d){return d.y;});
+			  texts.attr("transform","translate(-200,0)");
+		});
+	</script>
+
+</html>

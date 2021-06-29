@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+        <style type="text/css">
+        html,
+        body {
+            height: 100%;
+        }
+
+        .axios path
+        .axios line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crisEdges;
+        }
+
+        .axios text {
+            font-family: MiNiJianZongYi-1;
+            font-size: 20px;
+        }
+        .tooltip{
+				position: absolute;
+				width: 240px;
+				height: auto;
+				font-family: simsun;
+				font-size: 18px;
+				text-align: left;
+				color: black;
+				border-width: 1px;
+				background-color: white;
+				border-radius: 3px;
+			}
+			.tooltip:after{
+				content: '';
+				position: absolute;
+				bottom: 100%;
+				left: 20%;
+				margin-left: -3px;
+				width: 0;
+				height: 0;
+				border-bottom: 12px solid black;
+				border-right: 12px solid transparent;
+				border-left: 12px solid transparent;
+                border-color: gray;
+			}
+    </style>
+
+</head>
+<!--/head-->
+
+<body class="homepage">
+
+<script src="../static/js/d3.v3.min.js" charset="utf-8"></script>
+<script>
+    </script>
+       <div class="content">
+           <h2 style="text-align: center; margin-bottom: 5px;">《悬崖之上》人物关系社交网络可视化</h2>
+            <div id="canvas">
+                <script src="../static/js/d3.v3.min.js" charset="utf-8"></script>
+            <script type="text/javascript">
+                var width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) * 1;
+                var height = (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) * 1;
+                var img_h = 50;
+                var img_w = 50;
+                var radius = 10;
+                var svg = d3.select("#canvas")
+                    .append("svg")
+                    .attr("width", width)
+                    .attr("height", height);
+
+                {% autoescape off %}
+                var nodesdata= {{nodesdata}};
+                var edgesdata = {{edgesdata}};
+                {% endautoescape %}
+
+                // {% for d in nodesdata %}
+                //     var index = new Array(3);
+                //     nodesdata.push({'name':"{{d.name}}",'image':"{{d.image}}",'intro':"{{d.intro}}"});
+                // {% endfor %}
+                //
+                // {% for e in edgesdata %}
+                //     edgesdata.push({'source':"{{e.source}}",'target':"{{e.target}}",'relation':"{{e.relation}}"});
+                // {% endfor %}
+                // var nodes=nodesdata
+                // var edges=edgesdata
+
+                var force = d3.layout.force()
+                    .nodes(nodesdata)
+                    .links(edgesdata)
+                    .size([width, height])
+                    .linkDistance(360)
+                    .charge(-200)
+                    .start();
+
+                var tooltip = d3.selectAll("#canvas")
+                    .append("div")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0.0);
+                //绘制
+                var color = d3.scale.category20();
+                var lines = svg.selectAll(".forceLine")
+                    .data(edgesdata)
+                    .enter()
+                    .append("line")
+                    .attr("class", "forceLine")
+                    .style("stroke", function (d, i) {//填充颜色
+                        return color(i);
+                    })
+                    .style("opacity", 0.7)
+                    .style("stroke-width", 1);
+
+                var edges_text = svg.selectAll(".linetext")
+                    .data(edgesdata)
+                    .enter()
+                    .append("text")
+                    .attr("class", "linetext")
+                    .text(function (d) {
+                        return d.relation;
+                    })
+                    .style("stroke", function (d, i) {//填充颜色
+                        return color(i);
+                    })
+                    .attr("dy", function (d, i) { return 10; })
+                    .style("font-size", 20);
+
+                var img_h = 70;
+                var img_w = 70;
+                var radius = 20;
+                var circles = svg.selectAll("forceCircle")
+                    .data(nodesdata)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "forceCircle")
+                    .attr("r", radius)
+                    .style("stroke", "DarkGray")
+                    .style("stroke-width", "1.0px")
+                    .attr("fill", function (d, i) {
+                        //创建圆形图片
+                        var defs = svg.append("defs").attr("id", "imgdefs");
+                        var catpattern = defs.append("pattern")
+                            .attr("id", "catpattern" + i)
+                            .attr("height", 4)
+                            .attr("width", 4);
+                        catpattern.append("image")
+                            .attr("x", - (img_w / 2 - radius + 5.8))
+                            .attr("y", - (img_h / 2 - radius + 3.5))
+                            .attr("width", img_w + 11)
+                            .attr("height", img_h + 6)
+                            .attr("xlink:href", "static/pic/xyzspic/" + d.image);
+                        return "url(#catpattern" + i + ")";
+                    })
+                    .on("mouseover", function (d, i) {
+                        tooltip.html("角色简介：" + d.intro)
+                            .style("left", (d3.event.pageX - 40) + "px")
+                            .style("top", (d3.event.pageY + 20) + "px")
+                            .style("opacity", 0.7);
+
+                    })
+                     .on("mouseout", function (d, i) {
+                        tooltip.html("角色简介：" + d.intro)
+                            .style("left", (d3.event.pageX - 40) + "px")
+                            .style("top", (d3.event.pageY + 20) + "px")
+                            .style("opacity", 0.0);
+
+                    })
+                    .call(force.drag);
+                var texts = svg.selectAll(".forceText")
+                               .data(nodesdata)
+                               .enter()
+                               .append("text")
+                               .attr("class", "forceText")
+                               .attr("x", function (d) { return d.x; })
+                               .attr("y", function (d) { return d.y; })
+                               // .style("stroke", "#336666")
+                               .style("stroke-family", "仿宋")
+                               .style("font-size", "20px")
+                               .attr('text-anchor', 'middle')
+                               .attr("dy", function (d, i) { return 40; })
+                               .attr("fill", function (d, i) { return color(i); })
+                               .text(function (d) { return d.name; });
+
+                force.on("tick", function () {
+                    lines.attr("x1", function (d) { return d.source.x; });
+                    lines.attr("y1", function (d) { return d.source.y; });
+                    lines.attr("x2", function (d) { return d.target.x; });
+                    lines.attr("y2", function (d) { return d.target.y; });
+                    circles.attr("cx", function (d) { return d.x; });
+                    circles.attr("cy", function (d) { return d.y; });
+                    texts.attr("x", function (d) { return d.x; });
+                    texts.attr("y", function (d) { return d.y; });
+                    edges_text.attr("x", function (d) { return (d.source.x + d.target.x) / 2; });
+                    edges_text.attr("y", function (d) { return (d.source.y + d.target.y) / 2; });
+                });
+            </script>
+        </div>
+    </div>
+</body>
+
+</html>

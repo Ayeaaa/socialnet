@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>实时票房观测系统</title>
+    <style type="text/css">
+        html,
+        body {
+            height: 100%;
+        }
+        .axios path
+        .axios line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crisEdges;
+        }
+
+        .axios text {
+            font-family: MiNiJianZongYi-1;
+            font-size: 20px;
+        }
+        ul{/*设置导航栏的框框*/
+			 	margin: 30px auto;
+				 width: 2200px;
+				 height: auto;
+				padding: 10px;
+
+			}
+        li{
+            list-style-type: none;
+            float: left;
+        }
+        a{
+            display: block;
+            width: 200px;
+            height: 50px;
+            line-height: 50px;
+            background-color: #6a8bbc;
+            margin: 0px 0px;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        a:hover{
+            background-color: #66CCCC;
+        }
+        div{margin:0.2px auto;}
+        .box1{background: #66CCCC;text-align: center;}
+        .box2{background: #6a8bbc;text-align: right;line-height: 50px;padding-right: 80px;}
+        .box3{text-align: right;line-height: 15px;}
+
+    </style>
+</head>
+
+<body>
+    <h1>悬崖之上豆瓣评论</h1>
+    <h5>作者：王妍妍 谭力仁 杜佩妍</h5>
+    <button type="button" onclick="window.location.href ='/xyzs'">悬崖之上</button>
+    <button type="button" onclick="window.location.href ='/awaketime'">觉醒年代</button>
+    <button type="button" onclick="window.location.href ='/map'">地图</button>
+    <button type="button" onclick="window.location.href ='/bacon'">Bacon数据集</button>
+    <br>
+    词条：{{wdcount}}<br>
+
+    <div>
+        <script src="../static/js/d3.v3.min.js"></script>
+        <script src="../static/js/d3.layout.cloud.js"></script>
+        <script>
+            var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+            var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+            w = w * 0.96;
+            h = h * 0.96;
+
+            var fill = d3.scale.category20();
+            var words = new Array({{ wdcount }});
+            {% for wc in wdcloud %}
+            words[{{ loop.index0 }}]={ text: "{{wc[1]}}", size: "{{wc[0]}}" };
+            {% endfor %}
+
+            var wc = d3.layout.cloud()
+                .size([w, 400])
+                .words(words)
+                .padding(5)
+                .rotate(function () { return ~~(Math.random() * 2) * 90; })
+                .font("Impact")
+                .fontSize(function (d) { return d.size; })
+                .on("end", draw)
+                .start();
+
+            function draw(words) {
+                d3.select("body").append("svg")
+                    .attr("width", w)
+                    .attr("height", 400)
+                    .append("g")
+                    .attr("transform", "translate(" + w / 2 + ",200)")
+                    .selectAll("text")
+                    .data(words)
+                    .enter()
+                    .append("a")
+                    .attr("xlint:href", function (d) {
+                        return "/xyzs?wanted=" + d.text;
+                    })
+                    .append("text")
+                    .style("font-size", function (d) { return d.size + "px"; })
+                    .style("font-family", "Impact")
+                    .style("fill", function (d, i) { return fill(i); })
+                    .attr("text-anchor", "middle")
+                    .attr("transform", function (d) {
+                        return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                    })
+                    .text(function (d) { return d.text; });
+            }
+        </script>
+    </div>
+
+
+
+    <form action="/xyzs">
+        <input type="text" name="wanted" value="" default="张艺谋">
+        <input type="submit" value="搜索">
+    </form>
+
+    {% for r in rs %}
+    <font size="5" color="blue">{{r.wid }}&nbsp {{ r.content[0:40]}}&nbsp ···</font>
+    <br>
+    <font size="5" color="blue">【情感积极指数】{{ sentilist[r.wid]}}</font>
+    <br>
+    {# <font size="5" color="blue">【文章关键词】{{ kwlist[r.wid]}}</font>#}
+    <br>【内容】{{ r.content }}<br>
+
+    {% endfor %}
+
+</body>
+
+</html>

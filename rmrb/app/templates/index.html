@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>实时票房观测系统</title>
+    <style type="text/css">
+        html,
+        body {
+            height: 100%;
+        }
+        .axios path
+        .axios line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crisEdges;
+        }
+
+        .axios text {
+            font-family: MiNiJianZongYi-1;
+            font-size: 20px;
+        }
+        ul{/*设置导航栏的框框*/
+			 	margin: 30px auto;
+				 width: 2200px;
+				 height: auto;
+				padding: 10px;
+
+			}
+        li{
+            list-style-type: none;
+            float: left;
+        }
+        a{
+            display: block;
+            width: 200px;
+            height: 50px;
+            line-height: 50px;
+            background-color: #6a8bbc;
+            margin: 0px 0px;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        a:hover{
+            background-color: #66CCCC;
+        }
+        div{margin:0.2px auto;}
+        .box1{background: #66CCCC;text-align: center;line-height: 50px;margin-top: 300px;}
+        .box2{background: #6a8bbc;text-align: right;line-height: 50px;padding-right: 80px;}
+        .box3{text-align: right;line-height: 15px;}
+        .box4{line-height: 300px;}
+
+    </style>
+</head>
+<body>
+<div class="box2">
+
+    <li><a href="http://127.0.0.1:5000/bo_top10">票房数据</a></li>
+    <li><a href="http://127.0.0.1:5000/xyzs">国内热门</a></li>
+    <li><a href="http://127.0.0.1:5000/map">地区分布</a></li>
+</div>
+<div class="box4"></div>
+<div    class="box1">
+    <font size="72">实时票房观测系统</font>
+</div>
+</body>
+</html>

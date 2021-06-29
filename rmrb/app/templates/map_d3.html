@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>悬崖之上	票房分布</title>
+		<style>
+			.province {
+				stroke: black;
+				stroke-width: 1px;
+			}
+
+			#southchinasea {
+				stroke: black;
+				stroke-width: 1px;
+				fill: red;
+			}
+
+			.tooltip{
+				position: absolute;
+				width: 130px;
+				height: auto;
+				font-family: simsun;
+				font-size: 10px;
+				text-align: center;
+				color: black;
+				border-width: 1px solid black;
+				background-color: #FFFF66;
+				border-radius: 3px;
+			}
+			ul{/*设置导航栏的框框*/
+			 	margin: 30px auto;
+				 width: 2200px;
+				 height: auto;
+				padding: 10px;
+
+			}
+			li{
+				list-style-type: none;
+				float: left;
+			}
+			a{
+				display: block;
+				width: 200px;
+				height: 50px;
+				line-height: 50px;
+				background-color: #6a8bbc;
+				margin: 0px 0px;
+				color: #fff;
+				text-align: center;
+				text-decoration: none;
+				font-size: 18px;
+			}
+			a:hover{
+				background-color: #66CCCC;
+			}
+			div{margin:0.2px auto;}
+			.box1{background: #66CCCC;text-align: center;}
+			.box2{background: #6a8bbc;text-align: right;line-height: 50px;padding-right: 80px;}
+			.box3{text-align: right;line-height: 15px;}
+		</style>
+    </head>
+	<body>
+		<div class="box2">
+			<font size="48" color="#f0f8ff" face="MiNiJianZongYi-1">悬崖之上  票房地区分布</font>
+			<li><a href="http://127.0.0.1:5000/bo_top10">票房数据</a></li>
+			<li><a href="http://127.0.0.1:5000/xyzs">国内热门</a></li>
+			<li><a href="http://127.0.0.1:5000/map">地区分布</a></li>
+
+		</div>
+	</body>
+	<script src="../static/js/d3.v4.min.js" charset="utf-8"></script>
+	<script>
+				var dataset = new Array({{data_num}});
+		var box_office = new Array({{data_num}});
+		{% for d in data %}
+			var index = new Array(2);
+			index[0]="{{d.province}}";
+			index[1]={{d.box_office}};
+			dataset.push(index)
+			// movie.push("{{d.box_office}}");
+			box_office.push({{d.box_office}});
+		{% endfor %}
+		dataset = dataset.filter(n => n);
+    	box_office = box_office.filter(n => n);
+		console.log(dataset,box_office)
+		// movie = movie.filter(n => n);
+		// mps = mps.filter(n => n);
+
+		var  width=(window.innerWidth||document.documentElement.clientWidth||document.body.clientWidth)*0.98;
+		var  height=(window.innerHeight||document.documentElement.clientHeight||document.body.clientHeight)*0.98;
+		// var box_office = [13.0, 5.3, 30.5, 14.9, 27.6, 55.3, 42.6, 22.6, 138.9, 4.1, 9.3, 11.7, 6.0, 26.7, 18.1, 36.8, 32.9,
+		//     55.8, 24.3, 30.8, 38.0, 30.1, 42.6, 13.9, 23.1, 82.0, 61.6, 95.2, 13.0, 16.9, 17.4, 0, 0, 0];
+<!--			var linear = d3.scale.linear()-->
+		var linear = d3.scaleLinear()
+						.domain([0,25])
+						.range([80,240]);
+		var mapcolor = new Array();
+		for(var i=0; i<34; i++){
+			if(i>30)
+				mapcolor[i] = "rgb(0,121,230)";
+			else
+				mapcolor[i] = "rgb("+parseInt(linear(box_office[i])) +",121,230)"
+			}
+
+		var svg = d3.select("body").append("svg")
+					.attr("width", width)
+					.attr("height", height);
+
+
+
+		// var dataset = [["甘肃",13.0], ["青海",5.3], ["广西",30.5], ["贵州",14.9], ["重庆",27.6], ["北京",55.3],
+		// 	["福建",42.6], ["安徽",22.6], ["广东",138.9], ["西藏",4.1], ["新疆",9.3], ["海南",11.7], ["宁夏",6.0],
+		// 	["陕西",26.7] ,["山西",18.1], ["湖北",36.8], ["湖南",32.9], ["四川",55.8], ["云南",24.3], ["河北",30.8],
+		// 	["河南",38.0], ["辽宁",30.1], ["山东",42.6], ["天津",13.9], ["江西",23.1], ["江苏",82.0], ["上海",61.6],
+		// 	["浙江",95.2], ["吉林",13.0], ["内蒙古",16.9], ["黑龙江",17.4]];
+			//转化数据为适合生成饼图的对象数组
+		var pie = d3.pie()
+						.value(function(d){return d[1];});
+
+		var w=300;
+		var h=300;
+
+		var outerRadius=w/2;//外半径
+		var innerRadius=w/3;//圆环内半径
+
+			//用svg的path绘制弧形的内置方法
+		var arc=d3.arc()//设置弧度的内外径，等待传入的数据生成弧度
+				.outerRadius(outerRadius)
+				.innerRadius(innerRadius);
+
+		var dsum = d3.sum(dataset, function (d) {
+						return d[1];
+					});
+
+
+			//准备分组,把每个分组移到图表中心
+		var arcs=svg.selectAll("g")
+				.data(pie(dataset))
+				.enter()
+				.append("g")
+				//移到图表中心
+				.attr("transform", "translate(" + width *3/4 + "," + height *1.7/3 + ")");//translate(a,b)a表示横坐标起点，b表示纵坐标起点
+
+			//为组中每个元素绘制弧形路路径
+		arcs.append("path")//每个g元素都追加一个path元素用绑定到这个g的数据d生成路径信息
+				.attr("fill",function(d,i){//填充颜色
+					return mapcolor[i];
+				})
+				.attr("d",arc)//将角度转为弧度（d3使用弧度绘制
+				.attr("id", function(d,i){return "arc-"+d.data[0]})
+				.on("mouseover", function(d,i){
+					d3.select(this)
+						.attr("fill", d3.rgb(mapcolor[i]).brighter());
+					d3.select("#province-"+d.data[0])
+						.attr("fill","#FFFF99");
+
+					svg.append("text")
+					   .attr("id","info")
+					   .attr("x",width*3/4)
+					   .attr("y",height*1.73-25)
+					   .attr("text-anchor","middle")
+					   .attr("font-size",20)
+					   .text(d.data[0]);
+					svg.append("text")
+						.attr("id", "value")
+						.attr("x", width *3/4)
+						.attr("y", height *1.7/3 + 25)
+						.attr("text-anchor", "middle")
+						.attr("font-size", 20)
+						.text(d.data[1] + "(" + (d.data[1]/ dsum * 100).toFixed(2) + "%)");
+				})
+				.on("mouseout",function(d,i){
+					d3.select(this)
+						.attr("fill", mapcolor[i]);
+					d3.select("#province-"+d.data[0])
+						.attr("fill", mapcolor[i]);
+					d3.select("#info")
+						.remove();
+					d3.select("#value")
+						.remove();
+				});
+
+			//创建标题和作者
+
+		var dw="单位：万（票房）";
+
+		svg.append("text")
+				.text(dw)
+				.attr('x', function(d){
+					return width*0.9
+				})
+				.attr('y', height*0.9)
+				.attr('style', 'text-anchor:middle;dominant-baseline: middle;')
+				.attr('font-size',30);
+
+
+			//提示框部分
+		var tooltip=d3.selectAll("body")
+                    .append("div")
+                    .attr("class","tooltip")
+                    .style("opacity",0.0);
+
+			//定义地图的投影
+<!--			var projection = d3.geo.mercator()-->
+		var projection = d3.geoMercator()
+								   .center([107, 31])
+								   .scale(650)
+								   .translate([width/3, height*0.55]);
+
+			//定义地形路径生成器
+<!--			var path = d3.geo.path()-->
+		var path = d3.geoPath()
+						 .projection(projection);	//设定投影
+
+			//请求china.geojson
+		d3.json("../static/map/China.geojson", function(error, root) {
+				if (error)
+					return console.error(error);
+
+				var groups = svg.append("g");
+
+				groups.selectAll("path")
+						.data(root.features)
+						.enter()
+						.append("path")
+						.attr("class","province")
+						.attr("id",function(d,i){return "province-"+d.properties.name})
+						.attr("fill", function(d,i){
+							return mapcolor[i];
+						})
+						.attr("d", path)	//使用路径生成器
+						.on("mouseover",function(d,i){
+							d3.select(this)
+								.attr("fill","#FFFF99");
+							d3.select("#arc-"+d.properties.name)
+								.attr("fill","#FFFF99");
+							if(box_office[i] == 0){
+								tooltip.style("opacity",0.0)
+							}else{
+								tooltip.html("当日票房："+box_office[i]+"万")
+								   .style("left",(d3.event.pageX - 20)+"px")
+								   .style("top",(d3.event.pageY+10)+"px")
+								   .style("opacity",1.0);
+							}
+
+						})
+						.on("mouseout",function(d,i){
+							d3.select(this)
+								.attr("fill",mapcolor[i]);
+							d3.select("#arc-"+d.properties.name)
+								.attr("fill",mapcolor[i]);
+							tooltip.style("opacity",0.0)
+						});
+				var texts = svg.selectAll(".texts")
+								.data(root.features)
+								.enter()
+								.append("text")
+								.attr("class", "texts")
+								.text(function(d){return d.properties.name;})
+								.attr("transform", function(d) {
+									var centroid = path.centroid(d),
+										x = centroid[0],
+										y = centroid[1];
+								    if((d.properties.name=="河北")||(d.properties.name=="澳门")||(d.properties.name=="安徽"))
+											y=y+25;
+									return "translate(" + x + ", " + y + ")";
+								})
+								.attr('fill','#363636')
+								.attr("font-size","12px");
+			});
+	</script>
+	<svg class="southsea" width="150" height="200">
+	 <g id="southchinasea">
+	  <line id="svg_1" y2="7" x2="145" y1="7" x1="20"   />
+	  <line id="svg_2" y2="24" x2="6" y1="7" x1="20"   />
+	  <line id="svg_3" y2="195" x2="145" y1="7" x1="145"   />
+	  <line id="svg_4" y2="195" x2="6" y1="24" x1="6"   />
+	  <line id="svg_5" y2="195" x2="145" y1="195" x1="6"   />
+	  <path id="svg_6" d="m6,31.5l9,7.5l15,9l15,4l18,0l17,-14l21,-31L20,7L6,24z"   />
+	  <path id="svg_7" d="m113,7l10,25l11,-25z"   />
+	  <path id="svg_9" d="m46.5,66.5l14.5,-6.5l-1,13l-7,7l-15,4l8.5,-17.5z"   />
+	  <line id="svg_10" y2="46.5" x2="132.5" y1="31.5" x1="141.5"   />
+	  <line id="svg_11" y2="76.5" x2="115.5" y1="61.5" x1="121.5"   />
+	  <line id="svg_12" y2="111.5" x2="110.5" y1="92.5" x1="110.5"   />
+	  <line id="svg_13" y2="147.5" x2="101.5" y1="127.5" x1="108.5"   />
+	  <line id="svg_14" y2="177.5" x2="78.5" y1="163.5" x1="91.5"   />
+	  <line id="svg_15" y2="188.5" x2="39.5" y1="184.5" x1="54.5"   />
+	  <line id="svg_16" y2="158.5" x2="11.5" y1="172.5" x1="17.5"   />
+	  <line id="svg_17" y2="132.5" x2="39.5" y1="142.5" x1="24.5"   />
+	  <line id="svg_18" y2="98.5" x2="37.5" y1="113.5" x1="40.5"   />
+	 </g>
+	</svg>
+	<script src="../static/js/d3.v4.min.js" charset="utf-8"></script>
+	<script>
+		d3.select(".southsea")
+					.attr("transform","translate(600,-250),scale(0.5)")
+					.style("z-index",2)
+	</script>
+
+
+</html>

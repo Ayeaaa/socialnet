@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>实时票房观测系统</title>
+    <style type="text/css">
+        html,
+        body {
+            height: 100%;
+        }
+        .axios path
+        .axios line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crisEdges;
+        }
+
+        .axios text {
+            font-family: MiNiJianZongYi-1;
+            font-size: 20px;
+        }
+        ul{/*设置导航栏的框框*/
+			 	margin: 30px auto;
+				 width: 2200px;
+				 height: auto;
+				padding: 10px;
+
+			}
+        li{
+            list-style-type: none;
+            float: left;
+        }
+        a{
+            display: block;
+            width: 200px;
+            height: 50px;
+            line-height: 50px;
+            background-color: #6a8bbc;
+            margin: 0px 0px;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        a:hover{
+            background-color: #66CCCC;
+        }
+        div{margin:0.2px auto;}
+        .box1{background: #66CCCC;text-align: center;}
+        .box2{background: #6a8bbc;text-align: right;line-height: 50px;padding-right: 80px;}
+        .box3{text-align: right;line-height: 15px;}
+
+    </style>
+</head>
+<body>
+<div class="box2">
+    <font size="48" color="#f0f8ff" face="MiNiJianZongYi-1">实时票房观测系统</font>
+     <li><a href="http://127.0.0.1:5000/bo_top10">票房数据</a></li>
+    <li><a href="http://127.0.0.1:5000/xyzs">国内热门</a></li>
+    <li><a href="http://127.0.0.1:5000/map">地区分布</a></li>
+
+</div>
+<div class="box3">
+    <font size="3" color="black"> 杜佩妍 王妍妍 谭力仁</font>
+</div>
+</body>
+
+<script src="../static/js/d3.v4.min.js" charset="utf-8"></script>
+<script>
+    //设定svg大小
+    var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth * 0.95;
+    var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight * 0.95;
+
+    //创建序数比例尺和包括10中颜色的输出范围
+    var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+    //创建svg
+    var svg = d3.select('body')
+        .append('svg')
+        .attr('width', w)
+        .attr('height', h);
+
+    //创建标题和作者
+    var ntime = '2021/4/15 15:20'
+    var dw = "单位：万（票房）";
+
+    svg.append('text')
+        .attr('class', 'table-author')
+        .text(ntime)
+        .attr('x', function (d) {
+            return w * 0.1
+        })
+        .attr('y', function (d) {
+            return h * 0.05
+        })
+        .attr('style', 'text-anchor:left;dominant-baseline: right;')
+        .attr('font-size', 20);
+
+
+
+    svg.append("text")
+        .text(dw)
+        .attr('x', function (d) {
+            return w * 0.9
+        })
+        .attr('y', h * 0.35)
+        .attr('style', 'text-anchor:middle;dominant-baseline: middle;')
+        .attr('font-size', 30);
+
+    //加载电影数据
+    var movie = new Array({{ datanum }});
+    var mps = new Array({{ datanum }});
+    {% for d in data %}
+        var index = new Array(2);
+        index[0]="{{d.movie_name}}";
+        index[1]={{d.box_office}};
+        movie.push("{{d.movie_name}}");
+        mps.push({{d.box_office}});
+    {% endfor %}
+    movie = movie.filter(n => n);
+    mps = mps.filter(n => n);
+
+    //创建饼图
+    var pie = d3.pie().value(function(d,i) {
+				return mps[i];
+			});
+
+    var width = w * 0.2;
+    var height = width;
+    var out = 0
+    var outerRadius = (width / 1.85 + out);
+    var innerRadius = width / 3.5;
+
+    //用svg的path绘制弧形的内置方法
+    var arc = d3.arc()//设置弧度的内外径，等待传入的数据生成弧度
+        .outerRadius(outerRadius)
+        .innerRadius(innerRadius);
+
+    var dsum = d3.sum(mps);
+    //准备分组,把每个分组移到图表中心
+    var arcs = svg.selectAll("g")
+        .data(pie(mps))
+        .enter()
+        .append("g")
+        .attr("transform", "translate(" + (w * 3 / 4) + "," + (h * 2.25 / 4) + ")");//translate(a,b)a表示横坐标起点，b表示纵坐标起点
+
+    //为组中每个元素绘制弧形路路径
+    arcs.append("path")//每个g元素都追加一个path元素用绑定到这个g的数据d生成路径信息
+        .attr("id",function (d, i) {
+            return "arc-"+i;
+        })
+        .attr("fill", function (d, i) {//填充颜色
+            return color(i);
+        })
+        .attr("d", arc)//将角度转为弧度（d3使用弧度绘制
+        .on('mouseover', function (d, i) {
+            out = 50
+            d3.select(this)
+                .attr("fill", d3.rgb(color(i)).brighter());
+            d3.select("#rect-"+i)
+                .attr("fill", d3.rgb(color(i)).brighter());
+            svg.append("text")
+                .attr("id", "info")
+                .attr("x", w * 3/ 4)
+                .attr("y", h * 2.25/ 4 - 15)
+                .attr("text-anchor", "middle")
+                .attr("font-size", 25)
+                .text(movie[i]);
+
+            svg.append("text")
+                .attr("id", "value")
+                .attr("x", w * 3/ 4)
+                .attr("y", h * 2.25/ 4 + 12)
+                .attr("text-anchor", "middle")
+                .attr("font-size", 20)
+                .text(mps[i] + "(" + (mps[i] / dsum * 100).toFixed(2) + "%)");
+        })
+        .on('mouseout', function (d, i) {
+            d3.select(this)
+                .attr("fill", color(i));
+            d3.select("#rect-"+i)
+                .attr("fill", color(i));
+            d3.select("#info")
+                .remove();
+            d3.select("#value")
+                .remove();
+        });
+
+
+    //创建直方图
+    var xAxisWidth = w * 0.8;
+    var yAxisWidth = h * 0.7;
+
+    var yScale = d3.scaleBand()
+        .domain(movie)
+        .rangeRound([0, yAxisWidth]);
+
+    var xScale = d3.scaleLinear()
+        .domain([0, d3.max(mps)])
+        .range([0, xAxisWidth]);
+
+    var xAxis = d3.axisTop(xScale)
+    var yAxis = d3.axisLeft(yScale)
+
+    //留白
+    var padding = {top: 80, right: 260, bottom: 60, left: 180};
+
+    svg.append("g")
+        .attr("class", "X axis")
+        .attr("transform", "translate(" + (padding.left) + "," + (padding.top) + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "Y axis")
+        .attr("transform", "translate(" + (padding.left) + "," + (padding.top) + ")")
+        .call(yAxis)
+        .selectAll("text")
+        .style("font-size", "18px");
+
+
+    var rect = svg.selectAll("rect")
+        .data(mps)
+        .enter()
+        .append("rect")
+        .attr("id",function (d, i) {
+            return "rect-"+i;
+        })
+        .attr("fill", function (d, i) {
+            return color(i);
+        })
+        .attr("x", padding.left + 1)
+        .attr("y", function (d, i) {
+            return padding.top + yScale(movie[i]) + yScale.bandwidth() * 0.1;
+        })
+        .attr("height", yScale.bandwidth() * 0.8)
+        .attr("width", function (d,i) {
+            return xScale(mps[i]);
+        })
+        .on("mouseover", function (d, i) {
+            d3.select(this)
+                .attr("fill", d3.rgb(color(i)).brighter());
+            d3.select("#arc-"+i)
+                .attr("fill", d3.rgb(color(i)).brighter());
+            svg.append("text")
+                .attr("id", "num")
+                .attr("text-anchor", "left")
+                .attr("x",(xScale(mps[i]) + padding.left + 10))
+                .attr("y", (padding.top + yScale(movie[i]) + yScale.bandwidth() * 0.1 +20))
+                .attr("font-size", 20)
+                .text(mps[i])
+        })
+        .on("mouseout", function (d, i) {
+            d3.select(this)
+                .attr("fill", color(i));
+            d3.select("#arc-"+i)
+                .attr("fill",color(i));
+            d3.select("#num")
+                .remove();
+        })
+
+
+
+</script>
+
+</html>
