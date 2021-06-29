@@ -1,0 +1,99 @@
+{% extends "common/base.html" %}<!--继承基础模板-->
+{% block content %}<!--自定义模板区域-->
+ <!--main content start-->
+      <section id="main-content">
+          <section class="wrapper">
+			    <div class="row">
+                    <div class="col-lg-12">
+                        <h3 class="page-header"><i class="icon_genius"></i> 《人民日报》速览</h3>
+                        <ol class="breadcrumb">
+                            <li><i class="fa fa-home"></i><a href="quicklook.html">主页</a></li>
+                            <li><i class="icon_genius"></i>人民日报速览</li>
+                        </ol>
+                    </div>
+			    </div>
+                词条：当前搜索结果{{wdcount}}条
+                  <form class="form-horizontal " method="get" action="/quicklook">
+                      <div class="form-group">
+                          <div class="col-sm-4">
+                              <input class="form-control" name="wanted" value="" default="中国" type="text">
+                          </div>
+                          <div class="col-lg-4">
+                              <input class="btn btn-info" type="submit" value="搜索" title="Bootstrap 3 themes generator">
+                          </div>
+                      </div>
+                  </form>
+                    <div class="row">
+                        <script src="../static/js/d3.v3.min.js"></script>
+                        <script src="../static/js/d3.layout.cloud.js"></script>
+                        <script>
+                            var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+                            var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+                            w = w * 0.98;
+                            h = h * 0.98;
+
+                            var fill = d3.scale.category20();
+                            var words = new Array({{ wdcount }});
+                            {% for wc in wdcloud %}
+                                words[{{ loop.index0 }}]={ text: "{{wc[1]}}", size: "{{wc[0]}}" };
+                            {% endfor %}
+
+                            var wc = d3.layout.cloud()
+                                        .size([w, 300])
+                                        .words(words)
+                                        .padding(5)
+                                        .rotate(function () { return ~~(Math.random() * 2) * 90; })
+                                        .font("Impact")
+                                        .fontSize(function (d) { return d.size; })
+                                        .on("end", draw)
+                                        .start();
+
+                                function draw(words) {
+                                    d3.select(".row").append("svg")
+                                            .attr("width", w)
+                                            .attr("height", 300)
+                                            .append("g")
+                                            .attr("transform", "translate(" + w/2+20 + ",200)")
+                                            .selectAll("text")
+                                            .data(words)
+                                            .enter()
+                                            .append("a")
+                                            .attr("xlint:href", function (d) {
+                                                return "/quicklook?wanted=" + d.text;
+                                            })
+                                            .append("text")
+                                            .style("font-size", function (d) { return d.size + "px"; })
+                                            .style("font-family", "Impact")
+                                            .style("fill", function (d, i) { return fill(i); })
+                                            .attr("text-anchor", "middle")
+                                            .attr("transform", function (d) {
+                                                return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                                            })
+                                            .text(function (d) { return d.text; });
+                                    }
+                        </script>
+                    </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                      <section class="panel">
+                          <header class="panel-heading">《人民日报》四月新闻集锦</header>
+                          <div class="list-group">
+                              {% for r in rs %}
+                                  <a class="list-group-item " href="javascript:;">
+                                      <h4 class="list-group-item-heading" href="{{ r.url }}">{{r.id }}. {{ r.title}}</h4>
+                                      <p class="list-group-item-info">【文章关键词】{{ kwlist[r.id]}}</p>
+                                      <p class="list-group-item-success">【情感积极指数】{{ sentilist[r.id]}}</p>
+                                      <p class="list-group-item-text">【内容】{{ r.content }}</p>
+                                 </a>
+                              {% endfor %}
+                          </div>
+                      </section>
+                  </div>
+              </div>
+              <!-- page end-->
+          </section>
+      </section>
+      <!--main content end-->
+  </section>
+  <!-- container section end -->
+{% endblock %}

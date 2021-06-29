@@ -1,0 +1,297 @@
+{% extends "common/base.html" %}<!--继承基础模板-->
+{% block content %}<!--自定义模板区域-->
+<style type="text/css">
+        path{
+          fill: none;
+          stroke: #666;
+          stroke-width: 1.5px;
+        }
+        circle {
+          stroke: #333;
+          stroke-width: 1.5px;
+        }
+        text {
+          font: 10px sans-serif;
+          pointer-events: none;
+        }
+        .tooltip{
+            position: absolute;
+            width: 240px;
+            height: auto;
+            font-family: simsun;
+            font-size: 10px;
+            text-align: left;
+            color: black;
+            border-width: 1px solid black;
+            background-color: #7FFF00;
+            border-radius: 3px;
+        }
+        .tooltip:after{
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 20%;
+            margin-left: -3px;
+            width: 0;
+            height: 0;
+            border-bottom: 12px solid black;
+            border-right: 12px solid transparent;
+            border-left: 12px solid transparent;
+        }
+</style>
+ <!--main content start-->
+      <section id="main-content">
+          <section class="wrapper">
+              <div class="row">
+                   <div class="col-lg-8">
+                        <section class="panel">
+                            <header class="panel-heading">主题-关键词 力导向图</header>
+
+                          <script src="../static/js/d3.v3.min.js"></script>
+                          <script type="text/javascript">
+                                var  width=(window.innerWidth||document.documentElement.clientWidth||document.body.clientWidth)*0.7;
+                                var  height=(window.innerHeight||document.documentElement.clientHeight||document.body.clientHeight)*0.9;
+                                var  img_h=50;
+                                var  img_w=50;
+                                var  radius=10;
+                                var svg=d3.select(".panel")
+                                        .append("svg")
+                                        .attr("width",width)
+                                        .attr("height",height);
+
+                                var nodes=new Array({{nodes_num}});
+                                 {% for n in nodes %}
+                                    nodes[{{n.id}}]={name:"{{n.name}}",intro:"{{n.intro}}"};
+                                 {% endfor %}
+
+                                var edges=new Array({{edges_num}});
+                                 {% for e in edges %}
+                                    edges[{{loop.index-1}}]={source:{{e.source}},target:{{e.target}}};
+                                 {% endfor %}
+
+                                var force=d3.layout.force()
+                                        .nodes(nodes)
+                                        .links(edges)
+                                        .size([width,height])
+                                        .linkDistance(100)
+                                        .charge(-800)
+                                        .start();
+                                //提示框部分
+                                var tooltip=d3.selectAll(".panel")
+                                            .append("div")
+                                            .attr("class","tooltip")
+                                            .style("opacity",0.0);
+                               //箭头绘制
+                                var defs = svg.append("defs");
+                                var radius=5;
+                                var arrowMarker = defs.append("marker")
+                                                        .attr("id","arrow")
+                                                        .attr("markerUnits","strokeWidth")
+                                                        .attr("markerWidth","4")
+                                                        .attr("markerHeight","4")
+                                                        .attr("viewBox","0 0 4 4")
+                                                        .attr("refX",20+radius/8-2)   //实际是radius/strokeWidth
+                                                        .attr("refY",2)
+                                                        .attr("orient","auto");
+
+                                var arrow_path = "M0,1 L4,2 L0,3 L0,0";
+                                arrowMarker.append("path").attr("d",arrow_path);
+                                var color=d3.scale.category20();
+                                var path = svg.selectAll("path")
+                                                          .data(edges)
+                                                          .enter()
+                                                          .append("path")
+                                                          .attr("id", function(d,i) {
+                                                               return "edgepath" +i;
+                                                          })
+                                                          .attr("class","edges")
+                                                            .attr("fill",function (d,i) {
+                                                                return color(i%20);
+                                                            })
+                                                          .attr("marker-end","url(#arrow)");
+                                {#var pathtext = svg.selectAll('.pathText')#}
+                                {#          .data(edges)#}
+                                {#          .enter()#}
+                                {#          .append("text")#}
+                                {#          .attr("class","pathText")#}
+                                {#          .append('textPath')#}
+                                {#          .attr("text-anchor", "middle")//居中#}
+                                {#          .style("font-size","18")#}
+                                {#          .attr("startOffset","50%")#}
+                                {#          .attr('xlink:href', function(d,i) { return "#edgepath" + i; })#}
+                                {#          .text(function(d) { return d.relation; });#}
+                                {#var img_h=80;#}
+                                {#var img_w=80;#}
+                                var radius=10;
+                                var circles=svg.selectAll("forceCircle")
+                                               .data(nodes)
+                                               .enter()
+                                               .append("circle")
+                                               .attr("class","forceCircle")
+                                               .attr("r",function (d){
+                                                   if (d.id=1){
+                                                       return radius*2
+                                                   }
+                                                   else{
+                                                       return radius
+                                                   }
+                                               })
+                                               .style("stroke","DarkGray")
+                                               .style("stroke-width","1.0px")
+                                               .attr("fill", function(d, i){
+                                                   return color(i%20);
+                                                                {#//创建圆形图片#}
+                                                                {#var defs = svg.append("defs").attr("id", "imgdefs");#}
+                                                                {#var catpattern = defs.append("pattern")#}
+                                                                {#                     .attr("id", "catpattern" + i)#}
+                                                                {#                     .attr("height", 1)#}
+                                                                {#                     .attr("width", 1);#}
+                                                                {#catpattern.append("image")#}
+                                                                {#        .attr("x", - (img_w / 2 - radius+5.8))#}
+                                                                {#        .attr("y", - (img_h / 2 - radius+3.5))#}
+                                                                {#        .attr("width", img_w+13)#}
+                                                                {#        .attr("height", img_h+8)#}
+                                                                {#        .attr("xlink:href","../static/pic/xyzs/"+d.image);#}
+                                                                {#return "url(#catpattern" + i + ")";#}
+                                                })
+                                               .on("mouseover",function(d,i){    //加入提示框
+                                                    tooltip.html(d.intro)
+                                                           .style("left",(d3.event.pageX)+"px")
+                                                           .style("top",(d3.event.pageY+20)+"px")
+                                                           .style("opacity",1.0)
+                                                           .style("font-size","15");
+                                               })
+                                               .on("mousemove",function(d){
+                                                      tooltip.style("left",(d3.event.pageX)+"px")
+                                                             .style("top",(d3.event.pageY+20)+"px"); })
+                                               .on("mouseout",function(d){
+                                                    tooltip.style("opacity",0.0); })
+                                               .call(force.drag);
+                                var texts=svg.selectAll(".forceText")
+                                         .data(nodes)
+                                         .enter()
+                                         .append("text")
+                                         .attr("class","forceText")
+                                         .attr("x",function(d){return d.x;})
+                                         .attr("y",function(d){return d.y;})
+                                         .style("stroke", "#336666")
+                                         .attr("dx","-1.5em")
+                                         .attr("dy","3em")
+                                         .style("font-size","20")
+                                         .text(function(d){return d.name;});
+
+                                force.on("tick",function(){
+                                      path.attr("d", function(d) {
+                                            var dx = d.target.x - d.source.x;//增量
+                                            var	dy = d.target.y - d.source.y;
+                                            return "M" + d.source.x + ","+ d.source.y + "L" + d.target.x + "," + d.target.y;
+                                          });
+                                      path.attr("transform","translate(-200,0)");
+                                      circles.attr("cx",function(d){return d.x;});
+                                      circles.attr("cy",function(d){return d.y;});
+                                      circles.attr("transform","translate(-200,0)");
+                                      texts.attr("x",function(d){return d.x;});
+                                      texts.attr("y",function(d){return d.y;});
+                                      texts.attr("transform","translate(-200,0)");
+                                });
+                            </script>
+                        </section>
+                        <section class="panel">
+                            <header class="panel-heading">搜索-相关节点详情</header>
+                            <form class="form-horizontal " method="get" action="/net">
+                                  <div class="form-group">
+                                      <div class="col-sm-4">
+                                          <input class="form-control" name="wanted" value="" default="要闻栏目" type="text">
+                                      </div>
+                                      <div class="col-lg-4">
+                                          <input class="btn btn-info" type="submit" value="搜索" title="Bootstrap 3 themes generator">
+                                      </div>
+                                  </div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table">
+                                  <thead>
+                                    <tr>
+                                      <th>#</th>
+                                      <th>名称</th>
+                                      <th>出度</th>
+                                      <th>入度</th>
+                                      <th>PageRank</th>
+                                      <th>Centraliity</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {% for n in noders %}
+                                        <tr>
+                                          <td>{{ n.id }}</td>
+                                          <td>{{n.name}}</td>
+                                          <td>{{ n.outdegree }}</td>
+                                          <td>{{ n.indegree }}</td>
+                                          <td>{{ n.pagerank }}</td>
+                                          <td>{{ n.centrality }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                  </tbody>
+                                </table>
+                            </div>
+                        </section>
+                   </div>
+                    <div class="col-lg-4">
+                        <section class="panel">
+                            <header class="panel-heading">Pagerank&Centrality</header>
+                            <div class="list-group">
+                                <p>节点入度统计图</p>
+                                <img src="../static/img/indegree.png" height="300px">
+                            </div>
+                            <div class="list-group">
+                                <p>节点出度统计图</p>
+                                <img src="../static/img/outdegree.png" height="300px">
+                            </div>
+                            <div class="table-responsive">
+                            <table class="table">
+                              <thead>
+                                <tr>
+                                  <th>极大值</th>
+                                  <th>名称</th>
+                                  <th>出度</th>
+                                  <th>入度</th>
+                                  <th>PageRank</th>
+                                  <th>Centraliity</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td>Pagerank</td>
+                                  <td>要闻栏目</td>
+                                  <td>0</td>
+                                  <td>5</td>
+                                  <td>0.08902</td>
+                                  <td>0.03125</td>
+                                </tr>
+                                <tr>
+                                  <td>Centrality</td>
+                                  <td>医疗体制改革</td>
+                                  <td>2</td>
+                                  <td>15</td>
+                                  <td>0.04848</td>
+                                  <td>0.10625</td>
+                                </tr>
+                                <tr>
+                                  <td>Centrality</td>
+                                  <td>民生保障</td>
+                                  <td>1</td>
+                                  <td>16</td>
+                                  <td>0.02985</td>
+                                  <td>0.10625</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </section>
+                    </div>
+              </div>
+      </section>
+      <!--main content end-->
+  </section>
+  <!-- container section end -->
+{% endblock %}

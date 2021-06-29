@@ -1,0 +1,77 @@
+{% extends "common/base.html" %}<!--继承基础模板-->
+{% block content %}<!--自定义模板区域-->
+ <!--main content start-->
+      <section id="main-content">
+          <section class="wrapper">
+			    <div class="row">
+                    <div class="col-lg-12">
+                        <h3 class="page-header"><i class="icon_genius"></i> 《人民日报》社会专栏热度分析</h3>
+                        <ol class="breadcrumb">
+                            <li><i class="fa fa-home"></i><a href="quicklook.html">主页</a></li>
+                            <li><i class="icon_genius"></i>《人民日报》社会专栏</li>
+                        </ol>
+                    </div>
+			    </div>
+                词条：共包括{{wdcount}}条相关新闻
+                <br>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <section class="panel">
+                            <header class="panel-heading">主题-关键词 发展趋势图</header>
+                            <div class="list-group">
+                                <p>主题一：中医药发展</p>
+                                <img src="../static/img/laws/topic0.png" height="400px">
+                            </div>
+                            <div class="list-group">
+                                <p>主题二：社区住房改造</p>
+                                <img src="../static/img/laws/topic1.png" height="400px">
+                            </div>
+                            <div class="list-group">
+                                <p>主题三：社区供水工程建设</p>
+                                <img src="../static/img/laws/topic2.png" height="400px">
+                            </div>
+                            <div class="list-group">
+                                <p>主题四：企业培训和就业</p>
+                                <img src="../static/img/laws/topic3.png" height="400px">
+                            </div>
+                            <div class="list-group">
+                                <p>主题五：医疗服务</p>
+                                <img src="../static/img/laws/topic4.png" height="400px">
+                            </div>
+                        </section>
+                    </div>
+                    <div class="col-lg-6">
+                      <section class="panel">
+                          <header class="panel-heading">《人民日报》四月社会专栏详情</header>
+                          <div class="list-group">
+                              <!--collapse start-->
+                              <div class="panel-group m-bot20" id="accordion">
+                                  {% for r in rs %}
+                                      <div class="panel panel-default">
+                                          <div class="panel-heading">
+                                              <h4 class="panel-title">
+                                                  <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse{{r.id }}">
+                                                      {{r.id }}. {{ r.title}}
+                                                  </a>
+                                              </h4>
+                                          </div>
+                                          <div id="collapse{{r.id }}" class="panel-collapse collapse in">
+                                              <div class="panel-body">
+                                                  【内容】{{ r.content }}
+                                              </div>
+                                          </div>
+                                      </div>
+                                  {% endfor %}
+                              </div>
+                              <!--collapse end-->
+                          </div>
+                      </section>
+                  </div>
+              </div>
+              <!-- page end-->
+          </section>
+      </section>
+      <!--main content end-->
+  </section>
+  <!-- container section end -->
+{% endblock %}
